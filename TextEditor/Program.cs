@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TextEditor
 {
@@ -9,14 +11,14 @@ namespace TextEditor
         {
             Menu();
         }
-
+        
         static void Menu()
         {
             Console.Clear();
             Console.WriteLine("What do you want to do?");
             Console.WriteLine("1 - Open File");
             Console.WriteLine("2 - Create new File");
-            Console.WriteLine("0 - Exit");
+            Console.WriteLine("0 - Exit");1
             short option = short.Parse(Console.ReadLine());
 
             switch (option)
@@ -34,11 +36,36 @@ namespace TextEditor
             Console.WriteLine("How is file path?");
             string path = Console.ReadLine();
 
-            using (var file = new StreamReader(path))
-            {
-                string text = file.ReadToEnd();
-                Console.WriteLine(text);
+            if (string.IsNullOrEmpty(path)) {
+                Console.WriteLine("The path can't be null or empty.");
+                Thread.Sleep(1000);
+                Console.WriteLine("Backing to menu.");
+                Thread.Sleep(2000);
+                Menu();
             }
+            try
+            {
+                using (var file = new StreamReader(path))
+                {
+                    string text = file.ReadToEnd();
+                    Console.WriteLine(text);
+                    Console.WriteLine("---------------------");
+                    Console.WriteLine("Do you want to edit?");
+                    Console.WriteLine("Type 1 to edit or 0 to keeping reading.");
+                    int yes_no = int.Parse(Console.ReadLine());
+                    if (yes_no == 0)
+                    {
+                        Console.WriteLine(text);
+                    }
+                    if (yes_no == 1) { 
+                        Edit();
+                    }
+                }
+            }
+            catch (Exception ex) { 
+                Console.WriteLine(ex.ToString());
+            }
+
             Console.WriteLine("");
             Console.ReadLine();
             Menu();
@@ -47,32 +74,45 @@ namespace TextEditor
         static void Edit()
         {
             Console.Clear();
-            Console.WriteLine("Type you text. (Press ESQ to leave)");
+            Console.WriteLine("Type your text. (Press ESQ to leave)");
             Console.WriteLine("----------");
             string text = "";
 
-            do
+            while (Console.ReadKey().Key != ConsoleKey.Escape)
             {
                 text += Console.ReadLine();
                 text += Environment.NewLine;
             }
-
-            while (Console.ReadKey().Key != ConsoleKey.Escape);
 
             Save(text);
         }
         static void Save(string text)
         {
             Console.Clear();
-            Console.WriteLine("How is the path to save the file?");
+            Console.WriteLine("How is the path to save file?");
             var path = Console.ReadLine();
 
-            using (var file = new StreamWriter(path))
+            if (string.IsNullOrWhiteSpace(path))
             {
-                file.WriteLine(text);
+                Console.WriteLine("The path can't be null or empty.");
+                Thread.Sleep(1500);
+                Save(text);
             }
+            try
+            {
+                using (var file = new StreamWriter(path))
+                {
+                    file.WriteLine(text);
+                }
 
-            Console.WriteLine($"File saved in {path}.");
+                Console.WriteLine($"File saved in {path}.");
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+                Console.WriteLine("Press any buttom to back to menu");
+            }  
+
             Console.ReadLine();
             Menu();
         }
